@@ -42,7 +42,42 @@ function lz4Decode(input, length) {
   if (d!==length) throw Error(`LZ4 length mismatch (${d}/${length})`);
   return dst;
 }
-function collect(text, place, out, {allowNumeric=false} = {}) {
+// Analyze Lua/Luau source as text; never execute embedded scripts.
+function withoutLuauComments(source) {
+  let output = '', i = 0;
+  while (i < source.length) {
+    const ch = source[i];
+    if (ch === '"' || ch === "'" || ch.charCodeAt(0) === 96) {
+      const quote = ch; let j = i + 1;
+      while (j < source.length) {
+        if (source[j] === '\\') { j += 2; continue; }
+        if (source[j++] === quote) break;
+      }
+      output += source.slice(i, j); i = j; continue;
+    }
+    if (source.startsWith('--', i)) {
+      const opener = /^--\[(=*)\[/.exec(source.slice(i, i+24));
+      if (opener) {
+        const close = ']' + opener[1] + ']';
+        const end = source.indexOf(close, i + opener[0].length);
+        const until = end < 0 ? source.length : end + close.length;
+        output += source.slice(i, until).replace(/[^\r\n]/g, ' ');
+        i = until; continue;
+      }
+      const end = source.indexOf('\n', i);
+      const until = end < 0 ? source.length : end;
+      output += ' '.repeat(until - i);
+      i = until; continue;
+    }
+    output += ch; i++;
+  }
+  return output;
+}
+const SCRIPT_HINT = /\b(?:require|LoadAsset|LoadAssetAsync|LoadAssetVersion)\s*\(|\b(?:Music|Sound|Animation|Module|TopbarPlus|Icon|Image|Asset|Mesh|Texture)(?:Id)?\s*[:=]/i;
+function likelyScript(source) {
+  return source.length < 8 * 1024 * 1024 && SCRIPT_HINT.test(source);
+}
+function collect(text, place, out, {allowNumeric=false, script=false} = {}) {
   if (!text) return;
   const add = (raw, evidence) => {
     if (!validId(raw)) return;
@@ -60,15 +95,29 @@ function collect(text, place, out, {allowNumeric=false} = {}) {
   // Script-style property assignments (must have a relevant property name).
   for (const match of text.matchAll(/\b(SoundId|AnimationId|TextureId|MeshId|ImageId|VideoId|AssetId)\s*[:=]\s*["']?(\d{5,17})(?!\d)/gi)) add(match[2], `${place}: ${match[1]}`);
   if (allowNumeric && /^\s*\d{5,17}\s*$/.test(text)) add(text.trim(), `${place}: asset property`);
+  if (script) {
+    const luau = withoutLuauComments(text);
+    for (const m of luau.matchAll(/\b(require|LoadAsset|LoadAssetAsync|LoadAssetVersion)\s*\(\s*(?:tonumber\s*\(\s*)?["']?(\d{1,17})(?!\d)["']?\s*\)?\s*\)/gi)) {
+      add(m[2], place + ': ' + m[1] + '()');
+    }
+    for (const m of luau.matchAll(/\bpcall\s*\(\s*require\s*,\s*(\d{1,17})(?!\d)\s*\)/gi)) {
+      add(m[1], place + ': pcall(require)');
+    }
+    const field = '(?:TopbarPlus|Music|Song|Audio|Sound|Animation|Dance|Emote|Module|Package|Asset|Icon|Thumbnail|Decal|Texture|Mesh|Image|Video|Shirt|Pants|Font)(?:Asset)?(?:Ids?|IDs?)?';
+    const named = new RegExp('(?:\\b|["\\x27])(?:' + field + ')\\s*(?:["\\x27]\\s*\\])?\\s*[:=]\\s*["\\x27]?(\\d{5,17})(?!\\d)', 'gi');
+    for (const m of luau.matchAll(named)) add(m[1], place + ': named asset field');
+  }
 }
 function scanXml(xml, out) {
   if (!/<roblox\b/i.test(xml.slice(0,2000))) throw Error('This file does not contain Roblox XML');
   collect(xml, 'XML', out);
   // A bare ID inside <Content name="SoundId"> is a property reference; a bare number elsewhere is not.
   for (const match of xml.matchAll(/<(\w+)\b[^>]*\bname=["']([^"']+)["'][^>]*>([\s\S]*?)<\/\1>/gi)) {
-    if (!ASSET_PROPERTY.test(match[2])) continue;
-    const value = match[3].replace(/<[^>]*>/g, '').replace(/&(?:quot|apos|amp|lt|gt);/g, '');
-    collect(value, `XML ${match[2]}`, out, {allowNumeric: true});
+    if (!ASSET_PROPERTY.test(match[2]) && !/^Source$/i.test(match[2])) continue;
+    const cdata = [...match[3].matchAll(/<!\[CDATA\[([\s\S]*?)\]\]>/g)].map(part => part[1]);
+    const raw = cdata.length ? cdata.join('\n') : match[3].replace(/<[^>]*>/g, '');
+    const value = raw.replace(/&(?:quot|apos|amp|lt|gt);/g, entity => ({'&quot;':'"','&apos;':"'",'&amp;':'&','&lt;':'<','&gt;':'>'}[entity] || entity));
+    collect(value, 'XML ' + match[2], out, {allowNumeric:true,script:/^Source$/i.test(match[2]) || likelyScript(value)});
   }
 }
 function scanSharedStrings(data, out) {
@@ -80,7 +129,7 @@ function scanSharedStrings(data, out) {
     if(at+16>data.length) throw Error('Invalid Roblox SSTR chunk');
     at+=16; // MD5
     const [value,next]=readString(data,at);at=next;
-    collect(value, 'SSTR source', out);
+    collect(value, 'SSTR source', out, {script: likelyScript(value)});
   }
 }
 function scanProp(data, out) {
@@ -93,7 +142,7 @@ function scanProp(data, out) {
     for (let n=0; n<200000 && at+4<=data.length; n++) {
       try {
         const [value,next] = readString(data,at); at=next;
-        collect(value, `PROP ${name}`, out, {allowNumeric: relevant});
+        collect(value, `PROP ${name}`, out, {allowNumeric: relevant, script: /^Source$/i.test(name) || likelyScript(value)});
       } catch { break; }
     }
   } else if (type === 0x22 && relevant) { // Modern Content has URI strings stored in this chunk
