@@ -1,0 +1,62 @@
+name: Publish XavierAssetPermision release
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - 'src/**'
+      - 'web/**'
+      - 'bin/**'
+      - 'docs/**'
+      - '.github/workflows/publish-release.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: xavier-asset-release
+  cancel-in-progress: false
+jobs:
+  release:
+    name: Test, package, and publish release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate source
+        run: |
+          npm test
+          npm run check
+          npm pack --dry-run
+      - name: Publish versioned source ZIP
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./package.json').version")"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid version: $VERSION" >&2
+            exit 1
+          fi
+          TAG="v$VERSION"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; no changes made."
+            exit 0
+          fi
+          WORK="$(mktemp -d)"
+          trap 'rm -rf "$WORK"' EXIT
+          mkdir -p "$WORK/XavierAssetPermision"
+          cp -a bin src web docs scripts test package.json README.md LICENSE .gitignore \
+            install.cmd INSTALL-CLI.bat PUBLISH-UPDATE.cmd PUBLISH-GITHUB.cmd \
+            RELEASE-GITHUB.cmd UNINSTALL-CLI.cmd START-LOCAL.bat \
+            publish-github.ps1 release.ps1 "$WORK/XavierAssetPermision/"
+          ZIP="$GITHUB_WORKSPACE/XavierAssetPermision_${TAG}_Source_Windows.zip"
+          (cd "$WORK" && zip -qr "$ZIP" XavierAssetPermision)
+          gh release create "$TAG" "$ZIP" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "XavierAssetPermision $TAG" \
+            --notes "Roblox ModuleScript asset-reference scanning and a larger Asset Library panel. Candidate asset IDs still require Roblox ownership verification."
+          echo "Published release $TAG and source ZIP."
