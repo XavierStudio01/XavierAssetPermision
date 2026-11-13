@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const OWNER='aristore018-cpu', REPO='XavierAssetPermision';
+const OWNER='XavierStudio01', REPO='XavierAssetPermision';
 const here=path.dirname(fileURLToPath(import.meta.url));
 const manifest=JSON.parse(await fs.readFile(path.resolve(here,'../package.json'),'utf8'));
 const version=manifest.version, args=process.argv.slice(2);

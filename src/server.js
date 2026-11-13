@@ -103,7 +103,7 @@ export async function startServer({ port = 0, browser = true } = {}) {
         return json(res, 200, await scanRobloxFile(decodeURIComponent(fileName), await fileBody(req)));
       }
       if (req.method === 'GET' && url.pathname === '/api/accounts') return json(res, 200, { accounts: vault.list() });
-      if (req.method === 'GET' && url.pathname === '/api/types') return json(res, 200, { types: TYPES, publicTypes: [...PUBLIC_TYPES], version: '1.3.1' });
+      if (req.method === 'GET' && url.pathname === '/api/types') return json(res, 200, { types: TYPES, publicTypes: [...PUBLIC_TYPES], version: '1.3.2' });
       if (req.method === 'POST' && url.pathname === '/api/accounts') {
         const b = await body(req);
         const kind = b.kind;

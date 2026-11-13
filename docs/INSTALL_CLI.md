@@ -11,7 +11,7 @@ npm -v
 ```
 
 ## Install from ZIP downloaded from GitHub Release
-Unzip `XavierAssetPermision_v1.3.1_Source_Windows.zip`, then:
+Unzip `XavierAssetPermision_v1.3.2_Source_Windows.zip`, then:
 
 ```powershell
 cd "FULL_PATH_TO_EXTRACTED_FOLDER\XavierAssetPermision"
@@ -23,7 +23,7 @@ This installer does not change PowerShell Execution Policy. It also removes only
 ## Install from GitHub without cloning (after repository publication)
 
 ```powershell
-npm.cmd install --global "https://github.com/aristore018-cpu/XavierAssetPermision/archive/refs/heads/main.tar.gz"
+npm.cmd install --global "https://github.com/XavierStudio01/XavierAssetPermision/archive/refs/heads/main.tar.gz"
 ```
 
 ## Start
@@ -40,6 +40,6 @@ If PowerShell reports `XavierAssetPermision is not recognized`, close and reopen
 
 The application is local; the PowerShell window must remain open while the dashboard is running. Login secrets are encrypted locally with DPAPI on Windows. Uninstall with `npm.cmd uninstall --global xavier-asset-permision` or `UNINSTALL-CLI.cmd`; previously stored credentials are intentionally preserved until removed from Accounts or manually deleted.
 
-## Fixed Windows path handling in v1.3.1
+## Fixed Windows path handling in v1.3.2
 
 The installer runs `npm.cmd pack .` in the extracted source directory rather than passing a quoted absolute directory through `FOR /F`, preventing the malformed `package.json` path seen when the install folder contains spaces. A temporary .tgz is created and deleted automatically; **users download only one source ZIP**. Installer verifies the installed `.cmd` launcher using `--version` before reporting success.

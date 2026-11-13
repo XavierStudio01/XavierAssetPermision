@@ -1,6 +1,6 @@
 {
   "name": "xavier-asset-permision",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "Xavier Studio Asset Permision: Roblox asset permissions, read-only RBXL/RBXM scanning, Windows CLI",
   "type": "module",
   "bin": {

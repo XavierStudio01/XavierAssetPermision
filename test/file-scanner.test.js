@@ -81,3 +81,31 @@ test('Roblox binary ZSTD PROP chunk decompresses natively without npm dependenci
  const result=await scanRobloxFile('zstd.rbxm', Buffer.concat([header,ch,compressed,chunk('END',Buffer.from('</roblox>'))]));
  assert.deepEqual(result.assets.map(a=>a.id),['123444555666']);
 });
+
+
+test('XML ModuleScript Source extracts require and asset assignments without counters', async () => {
+  const source = [
+    'local Icon = require(11796442115)',
+    'local iconId = "8234567890"',
+    'local SoundId = 9023456781',
+    'local dance = { AnimationId = "9323456782", fakeCounter = 9323456783 }',
+    '-- require(9999999999)',
+    '--[[ require(8888888888) ]]',
+    'local count = 7777777777',
+    'return Icon'
+  ].join('\n');
+  const xml = '<roblox version="4"><Item class="ModuleScript"><Properties><ProtectedString name="Source"><![CDATA[' + source + ']]></ProtectedString></Properties></Item></roblox>';
+  const result = await scanRobloxFile('module.rbxmx', Buffer.from(xml));
+  assert.deepEqual(new Set(result.assets.map(a => a.id)), new Set(['11796442115','8234567890','9023456781','9323456782']));
+  assert.equal(result.requiresVerification, true);
+});
+test('Binary ModuleScript Source detects require and LoadAsset without incidental numbers', async () => {
+  const code = 'local a = require(11796442115)\nlocal b = game:GetService("InsertService"):LoadAsset(334455667788)\nlocal count=9999999999';
+  const result = await scanRobloxFile('module.rbxm', model('Source',code));
+  assert.deepEqual(new Set(result.assets.map(a => a.id)), new Set(['11796442115','334455667788']));
+});
+test('Script source detects pcall(require, ID) and tonumber ID', async () => {
+  const code = 'local a=pcall(require, 223344556677)\nlocal b=require(tonumber("445566778899"))';
+  const result = await scanRobloxFile('script.rbxm', model('Source',code));
+  assert.deepEqual(new Set(result.assets.map(a => a.id)), new Set(['223344556677','445566778899']));
+});

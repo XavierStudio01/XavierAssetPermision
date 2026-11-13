@@ -1,4 +1,4 @@
-# GitHub Publish & Release — `aristore018-cpu/XavierAssetPermision`
+# GitHub Publish & Release — `XavierStudio01/XavierAssetPermision`
 
 This tool does **not** upload Roblox cookie files or DPAPI vault data. Only source code and documentation should go into the repository. Review `git status` before each push.
 
@@ -13,7 +13,7 @@ gh auth status
 gh api user --jq .login
 ```
 
-The login must be **`aristore018-cpu`**. Switch accounts if necessary:
+The login must be **`XavierStudio01`**. Switch accounts if necessary:
 
 ```powershell
 gh auth switch
@@ -27,7 +27,7 @@ Open PowerShell in the extracted project directory:
 cmd /c PUBLISH-GITHUB.cmd
 ```
 
-The script initializes git, commits files, checks your GitHub identity, creates **only** `aristore018-cpu/XavierAssetPermision` when missing, and pushes `main`. It will not touch `XavierSpoofer`, the asset uploader, or any other repository.
+The script initializes git, commits files, checks your GitHub identity, creates **only** `XavierStudio01/XavierAssetPermision` when missing, and pushes `main`. It will not touch `XavierSpoofer`, the asset uploader, or any other repository.
 
 If script reports `git commit failed`, configure the maintainer identity:
 
@@ -44,12 +44,12 @@ A commit on `main` does not automatically trigger end-user updates. Before publi
 cmd /c RELEASE-GITHUB.cmd
 ```
 
-The release script creates tag `v1.3.1` (derived from `package.json`) and uploads a source ZIP to the GitHub Release. The CLI's auto-updater reads `https://api.github.com/repos/aristore018-cpu/XavierAssetPermision/releases/latest` and installs only stable semver tags from that repo.
+The release script creates tag `v1.3.2` (derived from `package.json`) and uploads a source ZIP to the GitHub Release. The CLI's auto-updater reads `https://api.github.com/repos/XavierStudio01/XavierAssetPermision/releases/latest` and installs only stable semver tags from that repo.
 
 ## 4. Users install CLI
 
 ```powershell
-npm.cmd install --global "https://github.com/aristore018-cpu/XavierAssetPermision/archive/refs/tags/v1.3.1.tar.gz"
+npm.cmd install --global "https://github.com/XavierStudio01/XavierAssetPermision/archive/refs/tags/v1.3.2.tar.gz"
 XavierAssetPermision
 ```
 

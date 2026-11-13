@@ -1,6 +1,12 @@
-# Windows installer and RBX scanner update — v1.3.1
+# v1.3.2 — ModuleScript scanning and a larger asset list
 
-**Fixed packaging for Windows paths containing spaces (v1.3.1):** extract this archive, double-click `INSTALL-CLI.bat` or run `cmd /c install.cmd` from PowerShell. Installer uses no PowerShell scripts. Installer uses `npm.cmd` and removes only this application's `.ps1` shim when the corresponding `.cmd` launcher exists, so `XavierAssetPermision` works in PowerShell without changing Execution Policy. A managed corporate policy may still block software installs.
+The RBXM/RBXL importer detects readable Script, LocalScript and ModuleScript asset references including require(ID), pcall(require, ID), InsertService:LoadAsset(ID), and named asset configuration fields. IDs are candidates only and must be verified with Roblox before permission grants. The asset table is taller, with scroll contained inside the dashboard.
+
+---
+
+# Windows installer and RBX scanner update — v1.3.2
+
+**Fixed packaging for Windows paths containing spaces (v1.3.2):** extract this archive, double-click `INSTALL-CLI.bat` or run `cmd /c install.cmd` from PowerShell. Installer uses no PowerShell scripts. Installer uses `npm.cmd` and removes only this application's `.ps1` shim when the corresponding `.cmd` launcher exists, so `XavierAssetPermision` works in PowerShell without changing Execution Policy. A managed corporate policy may still block software installs.
 
 **Import Roblox Studio files:** Asset Library → **Paste Asset IDs** → **Import file**. Read-only offline extraction from `.rbxm`, `.rbxl`, `.rbxmx` and `.rbxlx` (binary LZ4/ZSTD + XML). Candidate IDs are recognized only from `rbxassetid://` / official Roblox asset URLs / explicit asset properties, not random numeric text. They are **not** proven to exist or belong to the logged-in account until Roblox ownership inspection returns verified. Private/unavailable/unmanaged assets remain blocked from grant. ZSTD decompression uses native Node.js 22.15+ (`node:zlib`) — there are no npm dependencies to download. Input file max 128 MB, 5,000 unique candidate IDs per paste.
 
@@ -10,7 +16,7 @@
 
 # XAVIER STUDIO ASSET PERMISION
 
-**XavierAssetPermision v1.3.1** — Windows-first, local CLI + web dashboard for Roblox asset permissions. No hosted Xavier backend, subscriptions, or browser extensions.
+**XavierAssetPermision v1.3.2** — Windows-first, local CLI + web dashboard for Roblox asset permissions. No hosted Xavier backend, subscriptions, or browser extensions.
 
 > Status: tested with simulated Roblox HTTP responses and a local server. Actual Roblox account discovery and permission grants need verification on your own authorized account. The Roblox API and rate limits can change.
 
@@ -21,7 +27,7 @@
 Requires **Node.js 22.15 or newer** (includes npm). Run **inside the extracted folder**. Only one ZIP download is needed:
 
 ```powershell
-cd "$HOME\Downloads\XavierAssetPermision_v1.3.1_Source_Windows\XavierAssetPermision"
+cd "$HOME\Downloads\XavierAssetPermision_v1.3.2_Source_Windows\XavierAssetPermision"
 cmd /c install.cmd
 ```
 
@@ -38,11 +44,11 @@ The app opens `http://127.0.0.1:<random-port>` in your browser. The PowerShell c
 **When the public repo exists**, anyone can install without downloading the ZIP:
 
 ```powershell
-npm.cmd install -g "https://github.com/aristore018-cpu/XavierAssetPermision/archive/refs/heads/main.tar.gz"
+npm.cmd install -g "https://github.com/XavierStudio01/XavierAssetPermision/archive/refs/heads/main.tar.gz"
 XavierAssetPermision
 ```
 
-If using a tagged release, install the **tagged archive**, e.g. `https://github.com/aristore018-cpu/XavierAssetPermision/archive/refs/tags/v1.3.1.tar.gz`. Node.js must already be installed.
+If using a tagged release, install the **tagged archive**, e.g. `https://github.com/XavierStudio01/XavierAssetPermision/archive/refs/tags/v1.3.2.tar.gz`. Node.js must already be installed.
 
 ## Auto-update on CLI startup
 
@@ -57,11 +63,11 @@ XavierAssetPermision --help
 
 **An ordinary push/commit alone does not trigger updates**. The publisher must create a versioned GitHub Release after merging a new version (see `docs/PUBLISH_GITHUB.md`). No arbitrary GitHub Actions or third-party update endpoints are executed. Autoupdate installs source code published by the repository owner; users should trust that maintainer before installing.
 
-## CLI installer regression fix (v1.3.1)
+## CLI installer regression fix (v1.3.2)
 
 The old v1.3.0 installer combined a quoted absolute source path with `--pack-destination` within a `FOR /F` command, resulting in npm trying to open a malformed `package.json` path under `Xavier Suite`. The new installer calls `npm.cmd pack .` from the project directory, checks the expected archive, runs `npm.cmd install -g` from that archive, removes its temporary directory, and only reports success after running the installed command with `--version`. Failed steps return a nonzero exit code. On Windows the cmd launcher is used and only this application's matching `.ps1` shims are removed.
 
-If an earlier failed attempt left a broken CLI, install v1.3.1 over it. If npm reports EEXIST, run `npm.cmd uninstall -g xavier-asset-permision` and retry the new `install.cmd`. Stored Roblox account data is not removed by npm uninstall.
+If an earlier failed attempt left a broken CLI, install v1.3.2 over it. If npm reports EEXIST, run `npm.cmd uninstall -g xavier-asset-permision` and retry the new `install.cmd`. Stored Roblox account data is not removed by npm uninstall.
 
 ## Dashboard and workflow
 
@@ -115,7 +121,7 @@ Pasting cancels an active background discovery scan, so it doesn't compete with 
 
 ## Publishing, release, and support
 
-Read **[docs/PUBLISH_GITHUB.md](docs/PUBLISH_GITHUB.md)** for the repo creation/push/tag/release tutorial, and **[docs/INSTALL_CLI.md](docs/INSTALL_CLI.md)** for end-user installation / troubleshoot. `PUBLISH-GITHUB.cmd` (wrapper around `publish-github.ps1`) targets **only** `aristore018-cpu/XavierAssetPermision`; it does not alter other repositories. `RELEASE-GITHUB.cmd` (wrapper around `release.ps1`) creates a GitHub Release using the current `package.json` version.
+Read **[docs/PUBLISH_GITHUB.md](docs/PUBLISH_GITHUB.md)** for the repo creation/push/tag/release tutorial, and **[docs/INSTALL_CLI.md](docs/INSTALL_CLI.md)** for end-user installation / troubleshoot. `PUBLISH-GITHUB.cmd` (wrapper around `publish-github.ps1`) targets **only** `XavierStudio01/XavierAssetPermision`; it does not alter other repositories. `RELEASE-GITHUB.cmd` (wrapper around `release.ps1`) creates a GitHub Release using the current `package.json` version.
 
 ### Development / tests
 

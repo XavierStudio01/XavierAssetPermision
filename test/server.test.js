@@ -18,6 +18,6 @@ test('local dashboard serves token and rejects external-origin / missing-token A
     const crossOrigin=await fetch(`${url}/api/accounts`,{headers:{'Origin':'https://attacker.example','x-xavier-local-token':token}});
     assert.equal(crossOrigin.status,403);
     const types=await fetch(`${url}/api/types`,{headers:{'x-xavier-local-token':token}});
-    assert.equal((await types.json()).version,'1.3.1');
+    assert.equal((await types.json()).version,'1.3.2');
   } finally { await new Promise((resolve,reject)=>server.close(err=>err?reject(err):resolve())); }
 });

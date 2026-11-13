@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
-$owner = 'aristore018-cpu'
+$owner = 'XavierStudio01'
 $repo = 'XavierAssetPermision'
 if (-not (Get-Command gh -ErrorAction SilentlyContinue)) { throw 'Install GitHub CLI: https://cli.github.com/' }
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) { throw 'Install Git: https://git-scm.com/' }
