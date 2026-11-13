@@ -1,0 +1,9 @@
+node_modules/
+*.log
+.env
+.env.*
+accounts.json
+*.cookie
+*.token
+.DS_Store
+*.zip
